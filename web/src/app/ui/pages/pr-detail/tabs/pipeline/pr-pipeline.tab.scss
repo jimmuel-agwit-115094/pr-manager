@@ -1,0 +1,110 @@
+@use '../../../../shared/buttons';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.empty {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+
+  p {
+    margin: 0 0 8px;
+  }
+
+  .title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .hint {
+    margin-bottom: 16px;
+  }
+}
+
+.build-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px 8px;
+
+  h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .btn {
+    margin-left: auto;
+  }
+}
+
+.build-link {
+  font-size: 13px;
+  color: var(--link);
+}
+
+.pivot {
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+
+  span {
+    display: inline-block;
+    padding: 10px 0;
+    font-weight: 600;
+    border-bottom: 2px solid var(--primary);
+  }
+}
+
+.pane {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  // Fill the window below the PR header and tabs, like ADO.
+  height: max(480px, calc(100vh - 290px));
+
+  &.list-hidden {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+}
+
+.expand {
+  display: flex;
+  justify-content: center;
+  padding-top: 12px;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+}
+
+app-stage-graph {
+  min-height: 0;
+}
+
+.no-stages {
+  margin: 0;
+  padding: 16px 20px;
+  color: var(--text-secondary);
+}
+
+.error {
+  margin: 0;
+  padding: 0 20px 8px;
+  font-size: 13px;
+  color: var(--bad-text);
+}

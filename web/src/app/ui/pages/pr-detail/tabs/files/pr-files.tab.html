@@ -1,0 +1,235 @@
+@if (store.filesError(); as error) {
+  <div class="message-bar" role="alert">
+    <span><strong>Couldn't load the changed files.</strong> {{ error.message }}</span>
+    <button type="button" class="btn" (click)="store.reloadFiles()">Retry</button>
+  </div>
+} @else if (store.files(); as result) {
+  @if (!result.files.length) {
+    <div class="card empty">No files changed.</div>
+  } @else {
+    <div class="card layout">
+      <nav class="tree" aria-label="Changed files">
+        <p class="tree-summary">
+          {{ result.files.length }} file{{ result.files.length === 1 ? '' : 's' }}
+          <span class="del">-{{ totals().deletions }}</span>
+          <span class="add">+{{ totals().additions }}</span>
+        </p>
+        @if (result.truncated) {
+          <p class="warning">GitHub lists at most 3000 files, so some are missing.</p>
+        }
+        <ul role="tree">
+          <ng-container *ngTemplateOutlet="treeLevel; context: { $implicit: store.fileTree(), depth: 0 }" />
+        </ul>
+      </nav>
+
+      <section class="viewer" #viewer [attr.aria-label]="store.selectedFile()?.path">
+        @if (store.selectedFile(); as file) {
+          @let parts = splitPath(file.path);
+          <header class="file-header">
+            <span class="file-name">{{ parts.name }}</span>
+            <span class="del">-{{ file.deletions }}</span>
+            <span class="add">+{{ file.additions }}</span>
+            <span class="file-path">
+              /{{ parts.folder }}
+              @if (file.previousPath) {
+                · renamed from {{ file.previousPath }}
+              }
+            </span>
+            @if (review.error(); as error) {
+              <span class="threads-error" role="alert">Comments unavailable: {{ error.message }}</span>
+            }
+          </header>
+
+          @if (view(); as view) {
+            @if (store.fileViewError(); as error) {
+              <div class="message-bar message-bar--inline" role="alert">
+                <span><strong>Couldn't load the whole file.</strong> {{ error.message }} Showing the changed sections.</span>
+                <button type="button" class="btn" (click)="store.reloadFiles()">Retry</button>
+              </div>
+            } @else if (view.pending) {
+              <p class="note note--info" aria-live="polite">Showing the changed sections while the whole file loads…</p>
+            } @else if (!view.isFullFile && view.lines.length) {
+              <p class="note">Showing only the changed sections of this file.</p>
+            }
+
+            @if (!view.lines.length) {
+              <p class="no-diff">No diff to show. The file is binary, too large, or only renamed.</p>
+            } @else {
+              @if (unplacedThreads().length) {
+                <section class="outdated" aria-label="Comments without a line">
+                  <h3>Comments GitHub can't place on a line</h3>
+                  @for (thread of unplacedThreads(); track thread.id) {
+                    <ng-container *ngTemplateOutlet="threadTpl; context: { $implicit: thread }" />
+                  }
+                </section>
+              }
+              <div class="code-view" [class.code-view--single]="singleColumn()" role="table" [attr.aria-label]="file.path">
+                @for (row of rows(); track row.kind === 'gap' ? 'gap' + row.start : row.index) {
+                  @if (row.kind === 'gap') {
+                    <div class="line line--gap" role="row">
+                      <button type="button" class="expand" role="cell" (click)="expandGap(row.start)">
+                        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                          <path d="M4 6l4-3 4 3M4 10l4 3 4-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Show {{ row.count }} unchanged lines
+                      </button>
+                    </div>
+                  } @else {
+                    @let line = row.line;
+                    @if (line.type === 'hunk') {
+                      <div class="line line--hunk" role="row">
+                        <span class="num" role="cell"></span>
+                        @if (!singleColumn()) {
+                          <span class="num" role="cell"></span>
+                        }
+                        <span class="gutter" role="cell"></span>
+                        <span class="code" role="cell">{{ line.text }}</span>
+                      </div>
+                    } @else {
+                      <div
+                        class="line"
+                        [class.line--add]="line.type === 'add' && !singleColumn()"
+                        [class.line--del]="line.type === 'del' && !singleColumn()"
+                        role="row"
+                      >
+                        @if (singleColumn()) {
+                          <span class="num" role="cell">{{ line.newLine ?? line.oldLine }}</span>
+                        } @else {
+                          <span class="num" role="cell">
+                            {{ line.oldLine }}
+                            @if (line.type === 'del') {
+                              <span class="mark" aria-label="removed">−</span>
+                            }
+                          </span>
+                          <span class="num" role="cell">
+                            {{ line.newLine }}
+                            @if (line.type === 'add') {
+                              <span class="mark" aria-label="added">+</span>
+                            }
+                          </span>
+                        }
+                        <span class="gutter" role="cell">
+                          @if (row.anchor; as anchor) {
+                            <button
+                              type="button"
+                              class="add-comment"
+                              [title]="'Comment on line ' + anchor.line"
+                              [attr.aria-label]="'Comment on line ' + anchor.line"
+                              (click)="review.openDraft(anchor)"
+                            >
+                              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                                <path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z" fill="none" stroke="currentColor" stroke-linejoin="round" />
+                                <path d="M8 5.2v3.6M6.2 7h3.6" stroke="currentColor" stroke-linecap="round" />
+                              </svg>
+                            </button>
+                          }
+                        </span>
+                        <span class="code" role="cell">{{ line.text }}</span>
+                      </div>
+                    }
+                    @if (row.threads.length || row.draftOpen) {
+                      <div class="line-extras" role="row">
+                        <div role="cell">
+                          @for (thread of row.threads; track thread.id) {
+                            <ng-container *ngTemplateOutlet="threadTpl; context: { $implicit: thread }" />
+                          }
+                          @if (row.draftOpen) {
+                            <app-comment-box
+                              [avatarUrl]="currentUser.user()?.avatarUrl ?? ''"
+                              [busy]="review.posting() === 'new'"
+                              [error]="review.postError()?.message ?? null"
+                              (submitted)="review.comment($event)"
+                              (cancelled)="review.cancel()"
+                            />
+                          }
+                        </div>
+                      </div>
+                    }
+                  }
+                }
+              </div>
+              @if (hiddenRowCount()) {
+                <button type="button" class="btn show-more" (click)="showMore()">Show more ({{ hiddenRowCount() }} rows left)</button>
+              }
+            }
+          }
+        }
+      </section>
+    </div>
+  }
+} @else {
+  <div class="card empty" aria-busy="true">Loading changed files…</div>
+}
+
+<ng-template #threadTpl let-thread>
+  <app-review-thread
+    [thread]="thread"
+    [viewerAvatar]="currentUser.user()?.avatarUrl ?? ''"
+    [replying]="review.replyingTo() === thread.id"
+    [posting]="review.posting() === thread.id"
+    [error]="review.replyingTo() === thread.id ? (review.postError()?.message ?? null) : null"
+    (replyOpened)="review.openReply(thread.id)"
+    (replySubmitted)="review.reply(thread, $event)"
+    (replyCancelled)="review.cancel()"
+    [statusBusy]="review.posting() === statusKey(thread.id)"
+    [statusError]="review.statusErrorFor(thread.id)"
+    (statusChanged)="review.setResolved(thread, $event)"
+  />
+</ng-template>
+
+<ng-template #treeLevel let-nodes let-depth="depth">
+  @for (node of nodes; track node.path) {
+    @if (node.file) {
+      @let selected = store.selectedFile()?.path === node.path;
+      @let status = statusMark(node.file);
+      <li role="treeitem" [attr.aria-selected]="selected">
+        <button
+          type="button"
+          class="tree-row"
+          [class.tree-row--selected]="selected"
+          [style.padding-left.px]="30 + depth * 16"
+          [title]="node.path"
+          (click)="store.selectFile(node.path)"
+        >
+          @if (fileBadge(node.name); as badge) {
+            <span class="file-badge" aria-hidden="true">{{ badge }}</span>
+          } @else {
+            <svg class="file-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+              <path d="M3.5 1.5h6l3 3v10h-9z M9.5 1.5v3h3" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round" />
+            </svg>
+          }
+          <span class="tree-name">{{ node.name }}</span>
+          @if (review.countByPath().get(node.path); as count) {
+            <span class="comment-count" [title]="count + ' comment' + (count === 1 ? '' : 's')">
+              <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                <path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z" fill="none" stroke="currentColor" stroke-linejoin="round" />
+              </svg>
+              {{ count }}
+            </span>
+          }
+          @if (status) {
+            <span class="status-mark" [title]="status.title" [attr.aria-label]="status.title">{{ status.mark }}</span>
+          }
+        </button>
+      </li>
+    } @else {
+      @let open = !collapsedFolders().has(node.path);
+      <li role="treeitem" [attr.aria-expanded]="open">
+        <button type="button" class="tree-row" [style.padding-left.px]="8 + depth * 16" [title]="node.path" (click)="toggleFolder(node.path)">
+          <svg class="chevron" [class.chevron--closed]="!open" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path d="M3.5 6l4.5 4.5 4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <svg class="folder" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+            <path d="M1.5 3.5h4.5l1.5 1.5h7v8.5h-13z" />
+          </svg>
+          <span class="tree-name">{{ node.name }}</span>
+        </button>
+        @if (open) {
+          <ul role="group">
+            <ng-container *ngTemplateOutlet="treeLevel; context: { $implicit: node.children, depth: depth + 1 }" />
+          </ul>
+        }
+      </li>
+    }
+  }
+</ng-template>

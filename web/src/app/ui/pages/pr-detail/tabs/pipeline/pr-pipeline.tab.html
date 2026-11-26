@@ -1,0 +1,75 @@
+@if (store.error(); as error) {
+  <div class="card empty" role="alert">
+    <p class="title">Couldn't load the pipeline stages.</p>
+    <p>{{ error.message }}</p>
+    @if (error.status === 401 || error.status === 403) {
+      <p class="hint">Set <code>ADO_PAT</code> in <code>server/.env</code> with <strong>Build: Read &amp; execute</strong>, restart the server, then retry.</p>
+    }
+    <button type="button" class="btn" (click)="store.reload()">Retry</button>
+  </div>
+} @else if (!store.loaded()) {
+  <div class="card empty" aria-busy="true"><p>Loading pipeline stages…</p></div>
+} @else if (!store.builds().length) {
+  <div class="card empty">
+    <p class="title">No Azure Pipelines run on this PR yet.</p>
+    <p>Queue the pipeline from the Overview tab.</p>
+  </div>
+} @else {
+  @for (build of store.builds(); track build.buildId) {
+    @let key = buildKey(build.buildId);
+    <section class="card build" [attr.aria-label]="build.pipeline">
+      <header class="build-head">
+        <app-stage-state-icon [state]="build.state" [size]="20" />
+        <h2>{{ build.pipeline }}</h2>
+        <a class="build-link" [href]="build.url" target="_blank" rel="noopener">#{{ build.buildId }} in Azure DevOps</a>
+        @if (build.canRetryFailed && store.canRerun()) {
+          <button
+            type="button"
+            class="btn btn--primary"
+            [disabled]="store.busy() !== null"
+            title="Rerun every failed or canceled job in this build"
+            (click)="store.retryFailed(build.buildId)"
+          >
+            {{ store.busy() === key ? 'Rerunning…' : 'Rerun failed jobs' }}
+          </button>
+        }
+      </header>
+      @if (store.errorFor(key); as err) {
+        <p class="error" role="alert">{{ err.message }}</p>
+      }
+
+      @if (build.stages.length) {
+        <nav class="pivot" aria-label="Pipeline views"><span class="active">Stages</span></nav>
+        <div class="pane" [class.list-hidden]="listHidden()">
+          @if (listHidden()) {
+            <button type="button" class="expand" title="Show stage list" aria-label="Show stage list" (click)="listHidden.set(false)">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path d="M7.5 4l4 4-4 4M3.5 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          } @else {
+            <app-stage-list
+              [stages]="build.stages"
+              [selectedId]="selectedOf(build.buildId)"
+              (select)="selectStage(build.buildId, $event)"
+              (collapse)="listHidden.set(true)"
+            />
+          }
+          <app-stage-graph
+            [stages]="build.stages"
+            [hasGraph]="build.hasGraph"
+            [selectedId]="selectedOf(build.buildId)"
+            [canRerun]="store.canRerun()"
+            [busyStage]="store.busyStageOf(build.buildId)"
+            [disabled]="store.busy() !== null"
+            [stageError]="store.stageErrorOf(build.buildId)"
+            (select)="selectStage(build.buildId, $event)"
+            (rerun)="store.retryStage(build.buildId, $event.stage, $event.allJobs)"
+          />
+        </div>
+      } @else {
+        <p class="no-stages">Waiting for the build to start…</p>
+      }
+    </section>
+  }
+}

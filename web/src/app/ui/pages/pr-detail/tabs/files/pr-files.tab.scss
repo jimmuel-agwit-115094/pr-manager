@@ -1,0 +1,347 @@
+@use '../../../../shared/buttons';
+
+:host {
+  display: block;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.empty {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.message-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bad-bg);
+  border-radius: 2px;
+
+  span {
+    flex: 1;
+  }
+}
+
+.message-bar--inline {
+  margin: 12px 16px;
+}
+
+.add {
+  color: var(--ok);
+}
+
+.del {
+  color: var(--bad);
+}
+
+// Tree and file each scroll on their own, so picking a file never moves the page.
+.layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 340px) minmax(0, 1fr);
+  height: max(480px, calc(100vh - 220px));
+  overflow: hidden;
+}
+
+.tree,
+.viewer {
+  min-height: 0;
+  overflow: auto;
+}
+
+.tree {
+  padding: 8px 0;
+  background: var(--bg);
+  border-right: 1px solid var(--border-strong);
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+.tree-summary {
+  display: flex;
+  gap: 6px;
+  margin: 4px 12px 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.warning,
+.note {
+  margin: 0 12px 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: #fff4ce;
+  border-radius: 2px;
+}
+
+.note {
+  margin: 8px 16px;
+}
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 4px 12px 4px 8px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+
+  svg {
+    flex: none;
+  }
+}
+
+.tree-row--selected,
+.tree-row--selected:hover {
+  background: #deecf9;
+}
+
+.tree-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron,
+.file-icon {
+  color: var(--text-secondary);
+}
+
+.chevron--closed {
+  transform: rotate(-90deg);
+}
+
+.folder {
+  fill: #dcb67a;
+}
+
+.file-badge {
+  flex: none;
+  min-width: 18px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.status-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+}
+
+.file-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.file-path {
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.no-diff,
+.loading {
+  margin: 0;
+  padding: 16px;
+  color: var(--text-secondary);
+}
+
+.code-view {
+  padding: 4px 0 16px;
+  font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.line {
+  display: flex;
+  min-width: max-content;
+}
+
+.num {
+  position: relative;
+  flex: none;
+  width: 56px;
+  padding-right: 14px;
+  color: var(--muted);
+  text-align: right;
+  user-select: none;
+}
+
+.mark {
+  position: absolute;
+  right: 2px;
+}
+
+.code {
+  flex: 1;
+  padding: 0 24px 0 16px;
+  white-space: pre;
+}
+
+.line--add {
+  background: var(--diff-add-bg);
+}
+
+.line--del {
+  background: var(--diff-del-bg);
+}
+
+.line--hunk {
+  margin: 4px 0;
+  color: var(--text-secondary);
+  background: var(--diff-hunk-bg);
+}
+
+// Inline review comments.
+.gutter {
+  flex: none;
+  width: 24px;
+}
+
+.add-comment {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 16px;
+  padding: 0;
+  color: var(--primary);
+  background: none;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  opacity: 0;
+
+  .line:hover &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: var(--surface-selected);
+  }
+}
+
+.line-extras > div {
+  position: sticky;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(760px, 100%);
+  max-width: calc(100vw - 420px);
+  min-width: 320px;
+  padding: 8px 16px 8px 64px;
+}
+
+.outdated {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 760px;
+  margin: 12px 16px;
+
+  h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+}
+
+.line--gap {
+  margin: 2px 0;
+  background: var(--diff-hunk-bg);
+}
+
+.expand {
+  position: sticky;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 16px;
+  font: inherit;
+  color: var(--link);
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.show-more {
+  margin: 0 16px 16px;
+}
+
+.note--info {
+  background: var(--surface-selected);
+}
+
+.comment-count {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.threads-error {
+  color: var(--bad-text);
+}
+
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 220px 1fr;
+    height: auto;
+  }
+
+  .tree {
+    border-right: none;
+    border-bottom: 1px solid var(--border-strong);
+  }
+}

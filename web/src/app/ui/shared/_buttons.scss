@@ -1,0 +1,61 @@
+// ADO-style buttons. `@use` from a component stylesheet to get .btn, .btn--primary, .btn--approve.
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 16px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  text-decoration: none;
+  background: var(--neutral-fill);
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--neutral-fill-hover);
+  }
+
+  &:disabled {
+    color: var(--muted);
+    cursor: default;
+  }
+}
+
+.btn--primary {
+  color: #fff;
+  background: var(--primary);
+
+  &:hover:not(:disabled) {
+    background: var(--primary-hover);
+  }
+
+  &:disabled {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(0, 120, 212, 0.45);
+  }
+}
+
+.btn--approve {
+  color: #fff;
+  background: var(--ok);
+
+  &:hover:not(:disabled) {
+    background: #2b8a3e;
+  }
+
+  &:disabled {
+    color: #fff;
+    background: rgba(51, 153, 71, 0.45);
+  }
+
+  &.btn--approved:disabled {
+    color: var(--ok);
+    background: rgba(51, 153, 71, 0.12);
+  }
+}

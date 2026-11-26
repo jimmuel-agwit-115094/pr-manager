@@ -1,0 +1,60 @@
+@let t = thread();
+<article class="thread" [class.thread--resolved]="t.isResolved" [attr.aria-label]="'Comment thread by ' + t.comments[0].author">
+  <div class="status">
+    <span class="pill" [class.pill--resolved]="t.isResolved">{{ t.isResolved ? 'Resolved' : 'Active' }}</span>
+    @if (t.isOutdated) {
+      <span class="pill pill--outdated">Outdated</span>
+    }
+    @if (t.isResolved ? t.canUnresolve : t.canResolve) {
+      <button
+        type="button"
+        class="status-btn"
+        [disabled]="statusBusy()"
+        [title]="t.isResolved ? 'Mark this thread active again' : 'Mark this thread resolved'"
+        (click)="statusChanged.emit(!t.isResolved)"
+      >
+        @if (statusBusy()) {
+          {{ t.isResolved ? 'Reactivating…' : 'Resolving…' }}
+        } @else {
+          {{ t.isResolved ? 'Reactivate' : 'Resolve' }}
+        }
+      </button>
+    }
+  </div>
+  @if (statusError(); as message) {
+    <p class="status-error" role="alert">{{ message }}</p>
+  }
+
+  @for (comment of t.comments; track comment.id) {
+    <div class="comment">
+      @if (comment.authorAvatar) {
+        <img class="avatar" [src]="comment.authorAvatar" alt="" width="28" height="28" />
+      } @else {
+        <span class="avatar avatar--empty" aria-hidden="true"></span>
+      }
+      <div class="content">
+        <div class="meta">
+          <strong>{{ comment.author }}</strong>
+          <a [href]="comment.url" target="_blank" rel="noopener" [title]="comment.createdAt">{{ comment.createdAt | timeAgo }}</a>
+        </div>
+        <!-- GitHub sanitizes bodyHTML; Angular sanitizes it again on bind. -->
+        <div class="body" [innerHTML]="comment.bodyHtml"></div>
+      </div>
+    </div>
+  }
+
+  @if (replying()) {
+    <app-comment-box
+      class="reply-box"
+      placeholder="Write a reply…"
+      submitLabel="Reply"
+      [avatarUrl]="viewerAvatar()"
+      [busy]="posting()"
+      [error]="error()"
+      (submitted)="replySubmitted.emit($event)"
+      (cancelled)="replyCancelled.emit()"
+    />
+  } @else {
+    <button type="button" class="reply" (click)="replyOpened.emit()">Reply…</button>
+  }
+</article>

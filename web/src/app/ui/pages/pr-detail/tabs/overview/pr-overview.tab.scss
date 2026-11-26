@@ -1,0 +1,179 @@
+@use '../../../../shared/buttons';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+// The summary row: a bigger icon so pass / fail reads at a glance.
+.overall app-status-row ::ng-deep {
+  .title {
+    font-size: 15px;
+  }
+
+  .icon svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.warning {
+  margin: 10px 0 0 28px;
+  padding: 6px 10px;
+  font-size: 12px;
+  background: #fff4ce;
+  border-radius: 2px;
+}
+
+.checks {
+  margin: 12px 0 0 28px;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+
+  li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  li:last-child {
+    border-bottom: none;
+  }
+}
+
+.check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.check-name {
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+a.check-name:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.check-label {
+  color: var(--text-secondary);
+}
+
+.check-source {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+// Build output, styled like a terminal (as in the mockup).
+.console {
+  margin: 8px 0 0 24px;
+  padding: 10px 14px;
+  max-height: 260px;
+  overflow: auto;
+  font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #e6e6e6;
+  background: #1e1e1e;
+  border-radius: 2px;
+
+  .err {
+    color: #f48771;
+    font-weight: 600;
+  }
+
+}
+
+.comments {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comments-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+
+  h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+.filters {
+  display: flex;
+  gap: 4px;
+}
+
+.filter {
+  padding: 2px 10px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+}
+
+.filter--on {
+  color: var(--primary);
+  font-weight: 600;
+  background: var(--surface-selected);
+}
+
+.thread-card {
+  overflow: hidden;
+
+  // The card already has the border and shadow.
+  app-review-thread ::ng-deep .thread {
+    border-width: 1px 0 0 3px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+.empty {
+  margin: 0;
+  padding: 16px 20px;
+  color: var(--text-secondary);
+}
+
+.description {
+  padding: 16px 20px;
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}

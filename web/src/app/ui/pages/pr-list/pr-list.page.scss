@@ -1,0 +1,171 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+// ADO-style top bar: white, thin bottom border.
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--primary);
+
+  span {
+    color: var(--text);
+  }
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+
+  img {
+    border-radius: 50%;
+  }
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+// White card with ADO depth-8 shadow.
+.card {
+  min-height: 360px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.zero-data {
+  padding: 64px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+
+  p {
+    margin: 0;
+  }
+}
+
+.zero-title {
+  margin-bottom: 4px !important;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+// ADO MessageBar (error severity).
+.message-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 20px;
+  padding: 8px 12px;
+  color: var(--text);
+  background: var(--bad-bg);
+  border-radius: 2px;
+
+  svg {
+    flex: none;
+    color: var(--bad);
+  }
+
+  span {
+    flex: 1;
+  }
+
+  button {
+    height: 28px;
+    padding: 0 12px;
+    font: inherit;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--neutral-fill);
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--neutral-fill-hover);
+    }
+  }
+}
+
+.skeleton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sk-avatar,
+.sk-lines span {
+  background: var(--neutral-fill);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.sk-avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.sk-lines {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+
+  span {
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  span:first-child {
+    width: 45%;
+  }
+
+  span:last-child {
+    width: 28%;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}

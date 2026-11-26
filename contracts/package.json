@@ -1,0 +1,9 @@
+{
+  "name": "@pr-manager/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared DTO types between server and web. Types only, no runtime deps.",
+  "types": "src/index.ts",
+  "exports": { ".": "./src/index.ts" }
+}

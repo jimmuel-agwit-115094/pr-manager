@@ -1,0 +1,30 @@
+<div class="canvas" #canvas>
+  <svg class="edges" [attr.width]="size().w" [attr.height]="size().h" aria-hidden="true">
+    @for (p of paths(); track p.key) {
+      <path [attr.d]="p.d" [class.active]="p.active" />
+      @if (p.active) {
+        <circle [attr.cx]="p.x1" [attr.cy]="p.y1" r="3" />
+        <circle [attr.cx]="p.x2" [attr.cy]="p.y2" r="3" />
+      }
+    }
+  </svg>
+
+  @for (column of columns(); track $index) {
+    <div class="column">
+      @for (stage of column; track stage.id) {
+        <app-stage-card
+          [attr.data-stage]="stage.id"
+          [stage]="stage"
+          [expanded]="isExpanded(stage)"
+          [selected]="stage.id === selectedId()"
+          [canRerun]="canRerun()"
+          [busy]="!!stage.identifier && stage.identifier === busyStage()"
+          [disabled]="disabled()"
+          [error]="stageError()?.stage === stage.identifier ? stageError()!.error : null"
+          (toggle)="onToggle(stage)"
+          (rerun)="rerun.emit({ stage: stage.identifier!, allJobs: $event })"
+        />
+      }
+    </div>
+  }
+</div>

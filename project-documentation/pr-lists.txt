@@ -1,0 +1,109 @@
+# PR Manager — Phase 1: PR List
+
+## Context
+Personal tool. Our code is on GitHub and our pipelines run in ADO, and GitHub's PR UI is weak for our workflow. Build an ADO-style PR manager in Angular. Phase 1 covers only the **PR list** screen from the mockup: repo picker, then the list of open PRs. Later phases add the detail tabs (Files Changed, Story, Commits, Pipeline).
+
+`C:\neldevsrc\repos\pr-manager\` is empty. It holds only `project-documentation/pr-lists.txt`, which has no content. Node v24 / npm 11 are installed. No global Angular CLI and no `gh`.
+
+Decisions made:
+- **Angular SPA plus a small Node proxy.** Tokens stay in the server's `.env`, never in the browser. The proxy also gets around ADO CORS later.
+- **Repos come from a config file**, not from the API.
+- **List features:** title, branch, author, Mine badge, plus filters, status/CI, and age/comments.
+
+## Structure
+The UI, the data access, and the services are separate folders. The server follows the NBS layering: each layer depends only on the layer below it.
+
+```
+pr-manager/
+  project-documentation/pr-lists.txt     ← feature spec
+  contracts/                             ← shared DTO types (no deps), imported by server + web
+    src/pull-request.ts, repo.ts, user.ts, pr-filter.ts
+  server/                                ← Node 24 + Express + TS (tsx dev)
+    src/api/                             ← HTTP only: routes, request validation, error → status mapping
+      app.ts, routes/repos.routes.ts, routes/pulls.routes.ts, routes/me.routes.ts
+    src/services/                        ← business logic: filter → query mapping, DTO mapping, isMine, cache
+      pull-request.service.ts, repo.service.ts, user.service.ts, mappers/pull-request.mapper.ts
+    src/accessors/                       ← data access only: raw external calls, no business rules
+      github/github-graphql.client.ts    ← fetch + token + rate-limit handling
+      github/pull-request.accessor.ts    ← search query + raw GraphQL types
+      github/viewer.accessor.ts
+      config/repo-config.accessor.ts     ← reads repos.config.json
+      (ado/ later for pipeline + work items)
+    src/config/env.ts                    ← loads .env
+    repos.config.json, .env(.example)
+  web/                                   ← Angular (standalone, signals, zoneless)
+    proxy.conf.json                      ← /api → http://localhost:3000
+    src/app/data-access/                 ← HttpClient wrappers only, return contract types
+      pull-request.api.ts, repo.api.ts, user.api.ts
+    src/app/services/                    ← state + logic: signals, filter/search state, localStorage prefs
+      pr-list.store.ts, current-user.store.ts, user-prefs.service.ts
+    src/app/ui/                          ← presentation only: inject stores, no HttpClient
+      pages/pr-list/pr-list.page.ts
+      components/repo-picker/, pr-filter-tabs/, pr-list-item/, ci-status-dot/, time-ago.pipe.ts
+  package.json                           ← npm workspaces (contracts, server, web); `npm run dev` runs both
+  .gitignore, README.md
+```
+
+**Dependency rules**
+- Server: `api → services → accessors → GitHub/ADO`. Routes never call accessors. Accessors return raw GitHub shapes. Services map them to `contracts`.
+- Web: `ui → services (stores) → data-access → /api`. Components never inject `HttpClient` or the `*.api.ts` files.
+- `contracts` imports nothing. It is the shared language between the two apps.
+
+## Server (proxy)
+- `GET /api/me` returns `{ login, avatarUrl }` from the GraphQL `viewer`. The SPA uses it for the Mine badge.
+- `GET /api/repos` returns the contents of `repos.config.json`.
+- `GET /api/repos/:owner/:repo/pulls?filter=all|mine|review&q=` makes one GraphQL `search` call (type ISSUE):
+  - all → `repo:o/r is:pr is:open`
+  - mine → `… author:@me`
+  - review → `… review-requested:@me`
+  - `q` is added as free text.
+- Fields per PR: `number, title, url, isDraft, createdAt, updatedAt, headRefName, baseRefName, mergeable, author{login avatarUrl}, comments{totalCount}, reviewThreads{totalCount}, commits(last:1){nodes{commit{statusCheckRollup{state}}}}`.
+- The server maps each PR to a flat DTO: `{ number, title, url, branch, target, author, authorAvatar, isMine, isDraft, hasConflicts, ciState: 'SUCCESS'|'FAILURE'|'PENDING'|'NONE', commentCount, createdAt, updatedAt }`.
+- Errors: 401 → "token invalid/missing"; GitHub rate-limit → 429 passed through with the reset time.
+- Short in-memory cache (30s) per repo+filter so filter switching stays fast.
+
+## Web (Angular)
+- **data-access:** `PullRequestApi`, `RepoApi`, `UserApi`. These are thin `HttpClient` calls to `/api/*` that return `contracts` types.
+- **services:** `PrListStore` is the single place where list logic lives:
+  - Signals hold `selectedRepo`, `filter`, `search` (search debounced 300ms).
+  - `rxResource` loads PRs whenever those change.
+  - Exposes `prs`, `loading`, `error`.
+  - `UserPrefsService` remembers the last repo and filter in localStorage, wrapped in try/catch.
+- **ui:** `PrListPage` binds to the store and nothing else.
+- `RepoPicker`: a dropdown, as in the mockup ("Choose repo…").
+- `PrFilterTabs`: **All / Mine / Review requested** tabs plus a search box.
+- `PrListItem`, laid out like the mockup:
+  - Line 1: title (links to GitHub for now), `#number`, **Mine** pill, Draft pill, Conflicts pill.
+  - Line 2: `branch → target · author · updated 3h ago · 💬 n`.
+  - On the right: CI dot (green/red/amber/grey).
+- States: no repo picked, loading skeleton, empty ("No PRs"), error banner with the server message.
+- Styling: plain SCSS that matches the mockup (light grey list panel, row dividers, blue title links). No UI library at first.
+
+## Steps
+1. Write the feature spec into `project-documentation/pr-lists.txt`: scope, fields, filters, API contract.
+2. Scaffold the root `package.json`, `.gitignore`, and `README.md`, and run `git init`.
+3. Create `contracts/` with the DTO types.
+4. Scaffold `server/`, building bottom-up: accessors, then services and the mapper, then api routes. Add `.env.example` and `repos.config.json`.
+5. Scaffold `web/` with `npx @angular/cli new web --style=scss --routing --ssr=false`, then add `proxy.conf.json`.
+6. Build web bottom-up: data-access, then stores, then ui components and page. Route `/` goes to `PrListPage`.
+7. Add a root `npm run dev` script that runs both apps with `concurrently`.
+
+## Verification
+- Create `server/.env` with a GitHub fine-grained token (Pull requests: read, Metadata: read, Commit statuses/Checks: read) and add 1–2 real repos to the config.
+- `curl localhost:3000/api/me` returns your login. `curl localhost:3000/api/repos/<o>/<r>/pulls?filter=all` returns the DTO array.
+- `npm run dev` → open `http://localhost:4200`, then:
+  - Pick a repo; open PRs are listed.
+  - The Mine tab shows only your PRs, and the Mine badge is on the right rows.
+  - The CI dot matches GitHub's check status.
+  - Search filters the list.
+  - A bad token shows the error banner.
+- Unit tests:
+  - Server (vitest):
+    - The mapper, using a fixture GraphQL response.
+    - `PullRequestService` with a mocked accessor (filter → query, isMine, cache).
+  - Web:
+    - `PrListStore` with a mocked `PullRequestApi`.
+    - `PrListItem` rendering of the badges and CI dot.
+
+## Out of scope (later phases)
+PR detail tabs (Overview, Files Changed with inline comments and viewed-state, Commits, Story via ADO work items, Pipeline via ADO builds/timeline), ADO token, approve/merge actions.

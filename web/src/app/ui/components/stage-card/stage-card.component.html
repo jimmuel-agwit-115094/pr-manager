@@ -1,0 +1,64 @@
+@let s = stage();
+<button type="button" class="head" [attr.aria-expanded]="expanded()" [title]="s.name" (click)="toggle.emit()">
+  <span class="title">
+    <app-stage-state-icon [state]="s.state" />
+    <span class="name">{{ s.name }}</span>
+  </span>
+  <span class="meta">
+    <span>{{ jobSummary() }}</span>
+    <span>{{ formatDuration(s.durationMs) }}</span>
+  </span>
+</button>
+
+@if (expanded()) {
+  @if (s.jobs.length) {
+    <ul class="jobs" [attr.aria-label]="s.name + ' jobs'">
+      @for (job of s.jobs; track job.id) {
+        <li>
+          <app-stage-state-icon [state]="job.state" [size]="14" />
+          <span class="job-name" [title]="job.name">{{ job.name }}</span>
+          <span class="job-time">{{ formatDuration(job.durationMs) }}</span>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (s.canRetry && canRerun()) {
+    <div class="rerun">
+      <div class="split">
+        <button
+          type="button"
+          class="btn split-main"
+          [disabled]="disabled() || busy()"
+          title="Rerun the failed jobs of this stage"
+          (click)="emit(false)"
+        >
+          {{ busy() ? 'Rerunning…' : 'Rerun just this stage' }}
+        </button>
+        <button
+          type="button"
+          class="btn split-toggle"
+          [disabled]="disabled() || busy()"
+          aria-label="More rerun options"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="menuOpen()"
+          (click)="menuOpen.set(!menuOpen())"
+        >
+          <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+            <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+      @if (menuOpen()) {
+        <ul class="menu" role="menu">
+          <li role="none"><button type="button" role="menuitem" (click)="emit(false)">Rerun failed jobs</button></li>
+          <li role="none"><button type="button" role="menuitem" (click)="emit(true)">Rerun all jobs</button></li>
+        </ul>
+      }
+    </div>
+  }
+
+  @if (error(); as err) {
+    <p class="error" role="alert">{{ err.message }}</p>
+  }
+}

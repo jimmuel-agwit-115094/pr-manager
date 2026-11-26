@@ -1,0 +1,122 @@
+@use '../../shared/buttons';
+
+:host {
+  display: block;
+}
+
+.box {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.avatar {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.avatar--empty {
+  background: var(--neutral-fill);
+}
+
+.editor {
+  flex: 1;
+  min-width: 0;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--text);
+  resize: vertical;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+
+  &:focus {
+    border-color: var(--primary);
+    outline: 1px solid var(--primary);
+  }
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+
+  a {
+    text-decoration: none;
+  }
+}
+
+.error {
+  margin: 8px 0 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--bad-text);
+  background: var(--bad-bg);
+  border-radius: 2px;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.tool {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-hover);
+  }
+}
+
+.tool--bold {
+  font-weight: 700;
+}
+
+.tool--italic {
+  font-family: Georgia, serif;
+  font-style: italic;
+}
+
+.tool--code {
+  font-family: Consolas, monospace;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}

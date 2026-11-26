@@ -1,0 +1,127 @@
+<section class="card overall" aria-label="Overall status" aria-live="polite">
+  @let summary = overall();
+  <app-status-row [state]="summary.state" [title]="summary.title" [subtitle]="summary.subtitle" />
+</section>
+
+<section class="card" aria-label="Status">
+  @let pipelineLine = store.pipelineStatus();
+  @let pipeline = store.pipeline();
+
+  <app-status-row [state]="pipelineLine.state" [title]="pipelineLine.title" [subtitle]="pipelineLine.subtitle">
+    @if (store.pipelineAction(); as action) {
+      <div statusActions>
+        @if (action === 'requeue') {
+          <a class="btn" routerLink="../pipeline" title="See stages and rerun a single stage">View stages</a>
+        }
+        @if (action === 'queue') {
+          <button
+            type="button"
+            class="btn btn--primary"
+            [disabled]="!store.canRunPipeline()"
+            title="Comment /azp run to start the Azure Pipelines run"
+            (click)="store.queue()"
+          >
+            {{ store.busy() === 'queue' ? 'Queuing…' : 'Queue' }}
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="btn btn--primary"
+            [disabled]="!store.canRunPipeline()"
+            [title]="pipeline?.state === 'RUNNING' ? 'A run is in progress' : 'Comment /azp run to rerun the failed pipeline'"
+            (click)="store.requeue()"
+          >
+            {{ store.busy() === 'requeue' ? 'Requeuing…' : 'Requeue' }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (pipeline?.warning; as warning) {
+      <p class="warning">{{ warning }}</p>
+    }
+
+    @if (pipeline?.checks?.length) {
+      <ul class="checks" aria-label="Checks">
+        @for (check of pipeline!.checks; track check.name + check.source) {
+          <li>
+            <div class="check">
+              <app-ci-status-dot [state]="check.state" />
+              @if (check.url) {
+                <a class="check-name" [href]="check.url" target="_blank" rel="noopener">{{ check.name }}</a>
+              } @else {
+                <span class="check-name">{{ check.name }}</span>
+              }
+              <span class="check-label">{{ check.label }}</span>
+              @if (check.source !== check.name) {
+                <span class="check-source">{{ check.source }}</span>
+              }
+            </div>
+            @if (check.messages.length) {
+              <pre class="console" [attr.aria-label]="check.name + ' errors'">@for (message of check.messages; track $index) {<span [class.err]="$first">{{ message }}</span>
+}</pre>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </app-status-row>
+
+  @if (store.approvalStatus(); as approvals) {
+    <app-status-row [state]="approvals.state" [title]="approvals.title" [subtitle]="approvals.subtitle" />
+  }
+  @if (store.conflictStatus(); as conflicts) {
+    <app-status-row [state]="conflicts.state" [title]="conflicts.title" [subtitle]="conflicts.subtitle" />
+  }
+  @let comments = review.statusLine();
+  <app-status-row [state]="comments.state" [title]="comments.title" [subtitle]="comments.subtitle" />
+</section>
+
+@if (store.detail()?.body; as body) {
+  <section class="card description" aria-label="Description">
+    <h2>Description</h2>
+    <p>{{ body }}</p>
+  </section>
+}
+
+@if (review.counts().all) {
+  <section class="comments" aria-labelledby="comments-heading">
+    <div class="comments-head">
+      <h2 id="comments-heading">Comments</h2>
+      <div class="filters" role="group" aria-label="Show comments">
+        @for (f of filters; track f.value) {
+          <button
+            type="button"
+            class="filter"
+            [class.filter--on]="review.filter() === f.value"
+            [attr.aria-pressed]="review.filter() === f.value"
+            (click)="review.filter.set(f.value)"
+          >
+            {{ f.label }} ({{ review.counts()[f.value] }})
+          </button>
+        }
+      </div>
+    </div>
+
+    @for (thread of review.filtered(); track thread.id) {
+      <article class="card thread-card">
+        <app-code-snippet [path]="thread.path" [line]="thread.line" [lines]="thread.snippet" />
+        <app-review-thread
+          [thread]="thread"
+          [viewerAvatar]="currentUser.user()?.avatarUrl ?? ''"
+          [replying]="review.replyingTo() === thread.id"
+          [posting]="review.posting() === thread.id"
+          [error]="review.replyingTo() === thread.id ? (review.postError()?.message ?? null) : null"
+          [statusBusy]="review.posting() === statusKey(thread.id)"
+          [statusError]="review.statusErrorFor(thread.id)"
+          (replyOpened)="review.openReply(thread.id)"
+          (replySubmitted)="review.reply(thread, $event)"
+          (replyCancelled)="review.cancel()"
+          (statusChanged)="review.setResolved(thread, $event)"
+        />
+      </article>
+    } @empty {
+      <p class="card empty">No {{ review.filter() }} comments.</p>
+    }
+  </section>
+}

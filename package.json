@@ -1,0 +1,17 @@
+{
+  "name": "pr-manager",
+  "private": true,
+  "workspaces": [
+    "contracts",
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,magenta \"npm run dev -w server\" \"npm start -w web\"",
+    "build": "npm run build -w server && npm run build -w web",
+    "typecheck": "npm run typecheck -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7"
+  }
+}

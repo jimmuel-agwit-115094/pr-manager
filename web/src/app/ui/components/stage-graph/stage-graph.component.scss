@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  overflow: auto;
+}
+
+.canvas {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  width: max-content;
+  min-width: 100%;
+  padding: 20px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+app-stage-card {
+  z-index: 1;
+}
+
+.edges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+
+  path {
+    fill: none;
+    stroke: var(--border-strong);
+    stroke-width: 2;
+
+    &.active {
+      stroke: var(--primary);
+    }
+  }
+
+  circle {
+    fill: var(--primary);
+  }
+}

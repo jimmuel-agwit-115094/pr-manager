@@ -1,0 +1,8 @@
+[
+  { "owner": "nelnet-nbs", "name": "xlr8-app-passport", "displayName": "Passport" },
+  { "owner": "nelnet-nbs", "name": "xlr8-app-customer-service-portal", "displayName": "Customer Service Portal" },
+  { "owner": "nelnet-nbs", "name": "xlr8-app-checkout", "displayName": "Checkout" },
+  { "owner": "nelnet-nbs", "name": "xlr8-app-banking", "displayName": "Banking" },
+  { "owner": "nelnet-nbs", "name": "xlr8-app-payment-method-selector", "displayName": "Payment Method Selector" },
+  { "owner": "nelnet-nbs", "name": "xlr8-lib-angulartoolkit", "displayName": "Angular Toolkit" }
+]

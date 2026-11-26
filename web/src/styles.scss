@@ -1,0 +1,77 @@
+// Azure DevOps-inspired light theme. Light only by design.
+:root {
+  color-scheme: light;
+
+  // Surfaces
+  --bg: #f8f8f8;
+  --surface: #ffffff;
+  --surface-hover: rgba(0, 0, 0, 0.04);
+  --surface-selected: rgba(0, 120, 212, 0.08);
+  --neutral-fill: rgba(0, 0, 0, 0.06);
+  --neutral-fill-hover: rgba(0, 0, 0, 0.1);
+
+  // Text
+  --text: rgba(0, 0, 0, 0.9);
+  --text-secondary: rgba(0, 0, 0, 0.55);
+  --muted: rgba(0, 0, 0, 0.45);
+
+  // Lines
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.2);
+
+  // Brand + status
+  --primary: #0078d4;
+  --primary-hover: #106ebe;
+  --link: #0078d4;
+  --ok: #339947;
+  --bad: #cd4a45;
+  --bad-bg: #fbeceb;
+  --bad-text: #a4262c;
+  --pending: #0078d4;
+  --warn: #d67f3c;
+
+  // Diff lines
+  --diff-add-bg: #e1ecc8;
+  --diff-del-bg: #fbe3df;
+  --diff-hunk-bg: rgba(0, 120, 212, 0.06);
+
+  // Elevation (ADO depth-8)
+  --shadow-card: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+  --radius: 4px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--link);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+// Visually hidden, still read by screen readers.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
