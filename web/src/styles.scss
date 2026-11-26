@@ -35,6 +35,17 @@
   --diff-del-bg: #fbe3df;
   --diff-hunk-bg: rgba(0, 120, 212, 0.06);
 
+  // Build log console (ADO's log view is dark even in the light theme)
+  --log-bg: #1e1e1e;
+  --log-text: #d4d4d4;
+  --log-muted: #858585;
+  --log-error: #f48771;
+  --log-warning: #e5a54b;
+  --log-section: #89d185;
+  --log-command: #6cb6ff;
+  --log-highlight: rgba(255, 255, 255, 0.08);
+  --log-toolbar: #333333;
+
   // Elevation (ADO depth-8)
   --shadow-card: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
   --radius: 4px;

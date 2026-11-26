@@ -4,12 +4,37 @@
  */
 export type StageState = 'NOT_STARTED' | 'RUNNING' | 'SUCCEEDED' | 'WARNING' | 'FAILED' | 'CANCELED' | 'SKIPPED';
 
+export interface PrIssue {
+  type: 'error' | 'warning';
+  message: string;
+}
+
+/** One step of a job, e.g. ".NET Build" or "Exec Integration Tests". */
+export interface PrTask {
+  id: string;
+  name: string;
+  state: StageState;
+  durationMs: number | null;
+  /** ADO log id for GET …/builds/:buildId/logs/:logId. Null when the step wrote no log (yet). */
+  logId: number | null;
+  issues: PrIssue[];
+}
+
 export interface PrJob {
   id: string;
   name: string;
   state: StageState;
   /** Null until the job has both started and finished. */
   durationMs: number | null;
+  tasks: PrTask[];
+}
+
+/** A step's log as lines (ADO timestamps stripped). */
+export interface PrBuildLog {
+  logId: number;
+  lines: string[];
+  /** True when only the last lines are included. */
+  truncated: boolean;
 }
 
 export interface PrStage {

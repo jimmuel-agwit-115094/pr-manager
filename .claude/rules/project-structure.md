@@ -54,9 +54,9 @@ web/src/app/
     - pure helpers `pipelineStatusLine` / `approvalStatusLine` / `conflictStatusLine`
     - Files Changed state: `loadFiles()` (lazy), `fileTree`, `orderedFiles`, `selectFile()`, `selectedFile`, `fileView`
   - `file-view-rows.ts`: pure `buildLineRows` (threads under their line, outdated ones at the nearest line) and `collapseUnchanged` (gap rows).
-  - `BuildStore` (provided by `PrPipelineTab`): the PR's builds and stages, `retryStage` / `retryFailed` (one at a time, errors keyed per build or stage), polling while running. Pure `formatDuration`.
+  - `BuildStore` (provided by `PrPipelineTab`): the PR's builds and stages, `retryStage` / `retryFailed` (one at a time, errors keyed per build or stage), polling while running. Job view state: `showJob` / `closeJob` / `selectTask`, `selectedTask` (pure `defaultTask`: first failed step), `log`. Pure `formatDuration`, `logLineKind`.
   - `stage-graph.ts`: pure `layoutColumns`, `edgesOf`, `edgePath`, `expandedByDefault`.
-  - `file-tree.ts`: pure tree building (folders first, single-folder chains joined) and the matching file order.
+  - `file-tree.ts`: pure tree building (folders first, single-folder chains joined), the matching file order, and `fileBadge`.
   - `ReviewThreadsStore` (provided by `PrFilesTab` and `PrOverviewTab`, so it reloads each time either opens):
     - threads grouped by file and line (`groupThreads`, `lineKey`, `anchorOf`, `lineKeysOf`)
     - the `draft` / `replyingTo` / `posting` / `postError` / `lastAction` state, and the `comment` / `reply` / `setResolved` actions
@@ -69,3 +69,4 @@ web/src/app/
   - `comment-box` (plus the pure `markdown-format.ts`)
   - `review-thread`, `code-snippet` (file header plus a few diff lines)
   - `stage-graph` (columns by dependency depth, SVG connectors measured after render), `stage-card` (expandable: jobs, rerun split button), `stage-list` (All Stages), `stage-state-icon`
+  - `job-panel` (job steps + issues + log), `log-viewer` (dark console, error jumping)

@@ -15,9 +15,11 @@
     <ul class="jobs" [attr.aria-label]="s.name + ' jobs'">
       @for (job of s.jobs; track job.id) {
         <li>
-          <app-stage-state-icon [state]="job.state" [size]="14" />
-          <span class="job-name" [title]="job.name">{{ job.name }}</span>
-          <span class="job-time">{{ formatDuration(job.durationMs) }}</span>
+          <button type="button" class="job" [title]="'Show steps and log for ' + job.name" (click)="openJob.emit(job.id)">
+            <app-stage-state-icon [state]="job.state" [size]="14" />
+            <span class="job-name">{{ job.name }}</span>
+            <span class="job-time">{{ formatDuration(job.durationMs) }}</span>
+          </button>
         </li>
       }
     </ul>

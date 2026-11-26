@@ -60,3 +60,24 @@ function byFolderThenName(a: FileTreeNode, b: FileTreeNode): number {
   }
   return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
 }
+
+/** Short text icons by extension, ADO-style (M↓ for Markdown, C# for C#). */
+const FILE_BADGES: Record<string, string> = {
+  md: 'M↓',
+  cs: 'C#',
+  ts: 'TS',
+  js: 'JS',
+  json: '{}',
+  html: '<>',
+  scss: '#',
+  css: '#',
+  yml: 'Y',
+  yaml: 'Y',
+  csproj: 'C#',
+  sql: 'DB',
+};
+
+export function fileBadge(path: string): string | null {
+  const ext = path.slice(path.lastIndexOf('.') + 1).toLowerCase();
+  return path.includes('.') ? (FILE_BADGES[ext] ?? null) : null;
+}

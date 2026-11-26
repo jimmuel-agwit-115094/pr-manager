@@ -17,6 +17,15 @@ export interface AdoTimelineRecord {
   finishTime: string | null;
   order: number | null;
   attempt: number;
+  /** Set on Task (and Job) records that wrote a log. */
+  log?: { id: number } | null;
+  issues?: { type: 'error' | 'warning' | string; message: string | null }[] | null;
+}
+
+/** `GET build/builds/{id}/logs/{logId}` with a JSON accept header: the log as lines. */
+export interface AdoLogLines {
+  count: number;
+  value: string[];
 }
 
 export interface AdoTimeline {

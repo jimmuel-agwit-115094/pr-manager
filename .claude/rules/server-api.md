@@ -14,6 +14,7 @@ Every route sits under `/api` and is guarded by `api/local-only.ts`. Writes need
 | POST | `…/:number/pipeline/queue`, `…/pipeline/requeue` | Posts `/azp run`. 409 for the wrong action, a running pipeline, or a non-open PR |
 | GET | `…/:number/builds` | `PrBuild[]`: the PR's Azure Pipelines builds with stages and jobs, from the ADO timeline. Uncached |
 | POST | `…/:number/builds/:buildId/stages/:stage/retry` | `{ allJobs }` reruns one stage (failed jobs, or all jobs). Real ADO write. Returns refreshed builds |
+| GET | `…/:number/builds/:buildId/logs/:logId` | `PrBuildLog`: a step's log lines (ADO timestamps stripped, last 10,000 lines). Only for builds found for the PR |
 | POST | `…/:number/builds/:buildId/retry` | Reruns the build's failed jobs. Real ADO write. Returns refreshed builds |
 | GET | `…/:number/files` | `PrFiles`. The list and the PR head are fetched together and cached 30s |
 | GET | `…/:number/files/view?path=` | `PrFileView`: the whole head file with the diff merged in. Cached 10 min by head sha + path (max 40) |
@@ -63,7 +64,7 @@ Every route sits under `/api` and is guarded by `api/local-only.ts`. Writes need
 ## ADO builds (`build-timeline.mapper.ts`, `BuildService`)
 - `AdoRestClient` (PAT basic auth, api-version 7.1). `index.ts` makes one client per org; `AdoBuildAccessor` takes that factory.
 - Builds are found from the PR's Azure Pipelines check runs: `buildRefOf(detailsUrl)` parses org, project and `buildId` (dev.azure.com or *.visualstudio.com), deduped by build. When there are none (e.g. the GitHub token can't read check runs), `GET build/builds?branchName=refs/pull/{n}/merge&repositoryId={owner}/{repo}&repositoryType=GitHub` in `ADO_ORG`/`ADO_PROJECT` is used instead, keeping the latest build per pipeline definition.
-- Stages come from `GET build/builds/{id}/timeline`: Stage → Phase → Job records, sorted by `order`. `succeededWithIssues` maps to `WARNING`. A stage `canRetry` when it has an `identifier` and finished FAILED, CANCELED or WARNING.
+- Stages come from `GET build/builds/{id}/timeline`: Stage → Phase → Job records, sorted by `order`. `succeededWithIssues` maps to `WARNING`. Each job carries its Task records as `tasks` (state, duration, `log.id`, up to 20 error / warning `issues`). Logs come from `GET build/builds/{id}/logs/{logId}` with a JSON accept header, which returns the lines as an array. A stage `canRetry` when it has an `identifier` and finished FAILED, CANCELED or WARNING.
 - Stage dependencies (`dependsOn`, timeline stage ids) come from ADO's **undocumented** run-details data provider: `POST {org}/_apis/Contribution/HierarchyQuery/project/{project}` (api-version `7.1-preview.1`, contribution `ms.vss-build-web.run-details-data-provider`). It's what ADO's own build page calls. Any failure is swallowed and the build gets `hasGraph: false`.
 - Stage rerun: `PATCH build/builds/{id}/stages/{identifier}` `{ state: 'retry', forceRetryAllJobs, retryDependencies: true }`. Failed-job rerun: `PATCH build/builds/{id}?retry=true`.
 - Only builds that reported to this PR can be rerun (404 otherwise); 409 for a non-open PR, a running stage or nothing to rerun. Returns the refreshed `PrBuild[]`.

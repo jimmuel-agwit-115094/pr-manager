@@ -2,7 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import type { PrFileChange, PrFileView } from '@pr-manager/contracts';
 import { CurrentUserStore } from '../../../../../services/current-user.store';
-import { splitPath } from '../../../../../services/file-tree';
+import { fileBadge, splitPath } from '../../../../../services/file-tree';
 import { buildLineRows, collapseUnchanged, type ViewRow } from '../../../../../services/file-view-rows';
 import { PrDetailStore } from '../../../../../services/pr-detail.store';
 import { ReviewThreadsStore, statusKey } from '../../../../../services/review-threads.store';
@@ -12,33 +12,12 @@ import { ReviewThreadComponent } from '../../../../components/review-thread/revi
 /** Rows rendered per step; huge added files grow by this much on "Show more". */
 const RENDER_STEP = 1500;
 
-/** Short text icons by extension, ADO-style (M↓ for Markdown, C# for C#). */
-const FILE_BADGES: Record<string, string> = {
-  md: 'M↓',
-  cs: 'C#',
-  ts: 'TS',
-  js: 'JS',
-  json: '{}',
-  html: '<>',
-  scss: '#',
-  css: '#',
-  yml: 'Y',
-  yaml: 'Y',
-  csproj: 'C#',
-  sql: 'DB',
-};
-
 const STATUS_MARKS: Partial<Record<PrFileChange['status'], { mark: string; title: string }>> = {
   added: { mark: '+', title: 'Added' },
   removed: { mark: '−', title: 'Deleted' },
   renamed: { mark: 'R', title: 'Renamed' },
   copied: { mark: 'C', title: 'Copied' },
 };
-
-export function fileBadge(path: string): string | null {
-  const ext = path.slice(path.lastIndexOf('.') + 1).toLowerCase();
-  return path.includes('.') ? (FILE_BADGES[ext] ?? null) : null;
-}
 
 /** Files Changed: folder tree on the left; the selected file, whole, with its changes marked on the right. */
 @Component({

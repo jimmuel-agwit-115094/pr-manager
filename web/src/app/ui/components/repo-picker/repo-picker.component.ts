@@ -6,10 +6,10 @@ import type { Repo } from '@pr-manager/contracts';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <label for="repo-picker">Repository</label>
-    <select id="repo-picker" [value]="selectedKey() ?? ''" (change)="onChange($event)">
-      <option value="">Choose repo…</option>
+    <!-- [selected] per option, not [value] on the select: the options arrive after the value, which left it on nothing. -->
+    <select id="repo-picker" (change)="onChange($event)">
       @for (repo of repos(); track repo.owner + '/' + repo.name) {
-        <option [value]="repo.owner + '/' + repo.name">{{ repo.displayName }}</option>
+        <option [value]="repo.owner + '/' + repo.name" [selected]="repo.owner + '/' + repo.name === selectedKey()">{{ repo.displayName }}</option>
       }
     </select>
   `,

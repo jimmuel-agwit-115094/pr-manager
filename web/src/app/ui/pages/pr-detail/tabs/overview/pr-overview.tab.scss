@@ -147,13 +147,6 @@ a.check-name:hover {
 
 .thread-card {
   overflow: hidden;
-
-  // The card already has the border and shadow.
-  app-review-thread ::ng-deep .thread {
-    border-width: 1px 0 0 3px;
-    border-radius: 0;
-    box-shadow: none;
-  }
 }
 
 .empty {

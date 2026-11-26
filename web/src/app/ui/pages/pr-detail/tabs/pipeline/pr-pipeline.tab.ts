@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { BuildStore, buildKey } from '../../../../../services/build.store';
+import { JobPanelComponent } from '../../../../components/job-panel/job-panel.component';
 import { StageGraphComponent } from '../../../../components/stage-graph/stage-graph.component';
 import { StageListComponent } from '../../../../components/stage-list/stage-list.component';
 import { StageStateIconComponent } from '../../../../components/stage-state-icon/stage-state-icon.component';
@@ -8,7 +9,7 @@ import { StageStateIconComponent } from '../../../../components/stage-state-icon
 @Component({
   selector: 'app-pr-pipeline-tab',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [StageGraphComponent, StageListComponent, StageStateIconComponent],
+  imports: [JobPanelComponent, StageGraphComponent, StageListComponent, StageStateIconComponent],
   providers: [BuildStore],
   templateUrl: './pr-pipeline.tab.html',
   styleUrl: './pr-pipeline.tab.scss',

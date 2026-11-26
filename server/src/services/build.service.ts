@@ -1,8 +1,8 @@
-import type { PrBuild, PrPipeline } from '@pr-manager/contracts';
+import type { PrBuild, PrBuildLog, PrPipeline } from '@pr-manager/contracts';
 import type { AdoBuildAccessor } from '../accessors/ado/ado-build.accessor';
 import type { PullRequestAccessor } from '../accessors/github/pull-request.accessor';
 import { AppError } from '../errors';
-import { buildRefOf, buildStateOf, buildUrlOf, dependenciesOf, toPrStages, type BuildRef } from './mappers/build-timeline.mapper';
+import { buildRefOf, buildStateOf, buildUrlOf, dependenciesOf, toPrBuildLog, toPrStages, type BuildRef } from './mappers/build-timeline.mapper';
 import { pipelineNameOf } from './mappers/pipeline.mapper';
 import type { PipelineService } from './pipeline.service';
 import type { RepoService } from './repo.service';
@@ -31,6 +31,16 @@ export class BuildService {
   async list(owner: string, name: string, number: number): Promise<PrBuild[]> {
     const refs = await this.findRefs(owner, name, number);
     return Promise.all(refs.map((ref) => this.load(ref)));
+  }
+
+  /** One step's log. Only for builds found for this PR. */
+  async getLog(owner: string, name: string, number: number, buildId: number, logId: number): Promise<PrBuildLog> {
+    const ref = (await this.findRefs(owner, name, number)).find((r) => r.buildId === buildId);
+    if (!ref) {
+      throw new AppError(404, `Build ${buildId} did not run for this pull request.`);
+    }
+    const log = await this.ado.getLog(ref.org, ref.project, buildId, logId);
+    return toPrBuildLog(logId, log?.value ?? []);
   }
 
   async retryStage(owner: string, name: string, number: number, buildId: number, stage: string, allJobs: boolean): Promise<PrBuild[]> {

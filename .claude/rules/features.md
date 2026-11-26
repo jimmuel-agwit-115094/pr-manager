@@ -21,9 +21,12 @@
 - After a run, a **View stages** button links to the Pipeline tab.
 - The tab also shows approvals, merge conflicts and the PR description.
 - **Comments** status row: "No comments", "N active comments" (red) or "All comments resolved" (green), with "X of Y resolved".
-- Below the description, a **Comments** section lists every review thread, with All / Active / Resolved filters. Each thread card shows:
+- Below the description, a **Comments** section lists every review thread, newest activity first (a fresh reply moves a thread to the top), with All / Active / Resolved filters. Each ADO-style thread card shows:
   - the file name and path, the line, and the last 8 diff lines it was written on (its line marked)
-  - the thread, with Reply and a **Resolve** / **Reactivate** button
+  - a header with a round file-type badge, the file name and path, the line, and the time of the latest comment
+  - each comment as avatar, name and time with the body indented below; the first comment carries the status dropdown (Active / Resolved) and an Outdated pill
+  - a bottom row: your avatar, a "Write a reply…" box that opens the comment box, and a **Resolve** / **Reactivate** button
+  - the same thread card is used inline in Files Changed (framed there)
 - Resolve / Reactivate only show when GitHub says the viewer may (`viewerCanResolve` / `viewerCanUnresolve`). A failure shows on that thread only.
 
 ### Files Changed tab (ADO-style)
@@ -58,6 +61,10 @@
 - If stage dependencies can't be read (`hasGraph: false`), the cards show in one row in run order with no lines.
 - Expanded failed, canceled or warning stages show a **Rerun just this stage** split button (failed jobs). The dropdown offers "Rerun failed jobs" / "Rerun all jobs". Reruns are real ADO writes, and only show while the PR is open.
 - Needs `ADO_PAT` (Build: Read & execute); the tab shows a setup hint on 401/403. GitHub Checks read is optional: without it, builds are looked up in ADO by the PR's merge ref.
+- Clicking a job in a stage card opens the **job view** (replaces the stage pane; "Back to stages" returns):
+  - left: the job's steps with state and duration; the first failed step is picked by default
+  - right: the step's errors and warnings from the timeline, then its log in a dark console with line numbers. `##[error]` / `##[warning]` / `##[section]` / `##[command]` lines are coloured. It opens at the first error, with ↑ / ↓ to jump between errors. Only the last 10,000 lines are sent.
+  - a running step's log refreshes with each build poll
 - Polls every 10s while a build is running, and for 2 minutes after a rerun. A failed rerun shows on that stage or build only.
 
 ## Not built yet

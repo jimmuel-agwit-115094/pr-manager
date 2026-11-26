@@ -28,9 +28,9 @@ export class PrDetailPage {
   protected readonly currentUser = inject(CurrentUserStore);
   protected readonly tabs = TABS;
 
-  /** The Pipeline tab uses the full window width, like ADO's stage graph. */
+  /** Tab content is ADO width (~1200px), except the Pipeline tab, whose stage graph uses the full window. */
   private readonly router = inject(Router);
-  protected readonly wide = toSignal(
+  protected readonly wideTab = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
       map(() => isWideTab(this.router.url)),

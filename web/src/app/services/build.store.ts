@@ -1,6 +1,6 @@
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import type { ApiError, PrBuild, StageState } from '@pr-manager/contracts';
+import type { ApiError, PrBuild, PrTask, StageState } from '@pr-manager/contracts';
 import { firstValueFrom, type Observable } from 'rxjs';
 import { BuildApi } from '../data-access/build.api';
 import { toApiError } from '../data-access/api-error';
@@ -20,6 +20,33 @@ const ACTIVE: ReadonlySet<StageState> = new Set(['RUNNING', 'NOT_STARTED']);
 /** True while any build still has a stage running or waiting to start. */
 export function anyActive(builds: readonly PrBuild[]): boolean {
   return builds.some((b) => ACTIVE.has(b.state));
+}
+
+/** Step to show first: the first failed one, then the first with warnings, else the last that logged. */
+export function defaultTask(tasks: readonly PrTask[]): PrTask | null {
+  return (
+    tasks.find((t) => t.state === 'FAILED') ??
+    tasks.find((t) => t.state === 'WARNING' || t.issues.some((i) => i.type === 'error')) ??
+    [...tasks].reverse().find((t) => t.logId !== null) ??
+    tasks[0] ??
+    null
+  );
+}
+
+export type LogLineKind = 'error' | 'warning' | 'section' | 'command' | 'plain';
+
+/** Colour class for an ADO log line, from its `##[...]` marker. */
+export function logLineKind(line: string): LogLineKind {
+  if (line.startsWith('##[error]')) {
+    return 'error';
+  }
+  if (line.startsWith('##[warning]')) {
+    return 'warning';
+  }
+  if (line.startsWith('##[section]')) {
+    return 'section';
+  }
+  return line.startsWith('##[command]') ? 'command' : 'plain';
 }
 
 export function formatDuration(ms: number | null): string {
@@ -62,7 +89,51 @@ export class BuildStore {
   readonly actionError = signal<{ key: string; error: ApiError } | null>(null);
   private readonly rerunAt = signal<number | null>(null);
 
+  /** Job opened from a stage card (ADO's job view), and the step picked in it. */
+  readonly openJob = signal<{ buildId: number; jobId: string } | null>(null);
+  private readonly pickedTaskId = signal<string | null>(null);
+
+  readonly job = computed(() => {
+    const open = this.openJob();
+    const build = open && this.builds().find((b) => b.buildId === open.buildId);
+    const stage = build?.stages.find((s) => s.jobs.some((j) => j.id === open!.jobId));
+    const job = stage?.jobs.find((j) => j.id === open!.jobId);
+    return build && stage && job ? { build, stage, job } : null;
+  });
+
+  /** The picked step, else the first one that failed (what you usually want to debug). */
+  readonly selectedTask = computed(() => {
+    const tasks = this.job()?.job.tasks ?? [];
+    return tasks.find((t) => t.id === this.pickedTaskId()) ?? defaultTask(tasks);
+  });
+
+  private readonly logResource = rxResource({
+    params: () => {
+      const key = this.detail.key();
+      const open = this.openJob();
+      const task = this.selectedTask();
+      // State in the params: a step's log is fetched again when it finishes.
+      return key && open && task?.logId ? { key, buildId: open.buildId, logId: task.logId, state: task.state } : undefined;
+    },
+    stream: ({ params }) => this.api.log(params.key, params.buildId, params.logId),
+  });
+
+  readonly log = computed(() => {
+    const log = this.logResource.hasValue() ? this.logResource.value() : null;
+    return log && log.logId === this.selectedTask()?.logId ? log : null;
+  });
+  readonly logLoading = this.logResource.isLoading;
+  readonly logError = computed(() => (this.logResource.error() ? toApiError(this.logResource.error()) : null));
+
   constructor() {
+    // A running step's log grows: fetch it again on each build poll.
+    effect(() => {
+      this.builds();
+      if (untracked(() => this.selectedTask()?.state) === 'RUNNING') {
+        untracked(() => this.logResource.reload());
+      }
+    });
+
     effect((onCleanup) => {
       const recentRerun = this.rerunAt() !== null && Date.now() - this.rerunAt()! < RERUN_WINDOW_MS;
       if (!anyActive(this.builds()) && !recentRerun) {
@@ -75,6 +146,23 @@ export class BuildStore {
 
   reload(): void {
     this.resource.reload();
+  }
+
+  showJob(buildId: number, jobId: string): void {
+    this.pickedTaskId.set(null);
+    this.openJob.set({ buildId, jobId });
+  }
+
+  closeJob(): void {
+    this.openJob.set(null);
+  }
+
+  selectTask(taskId: string): void {
+    this.pickedTaskId.set(taskId);
+  }
+
+  reloadLog(): void {
+    this.logResource.reload();
   }
 
   errorFor(key: string): ApiError | null {

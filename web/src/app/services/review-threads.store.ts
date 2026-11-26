@@ -89,8 +89,15 @@ export function commentStatusLine(threads: readonly PrReviewThread[], error: Api
   return { state: 'FAILURE', title: `${active} active comment${active === 1 ? '' : 's'}`, subtitle };
 }
 
+/** Time of the thread's newest comment (ISO strings sort by time). */
+export function lastActivity(thread: PrReviewThread): string {
+  return thread.comments.reduce((latest, c) => (c.createdAt > latest ? c.createdAt : latest), '');
+}
+
+/** Filtered, newest activity first (a thread with a fresh reply moves to the top). */
 export function filterThreads(threads: readonly PrReviewThread[], filter: ThreadFilter): PrReviewThread[] {
-  return filter === 'all' ? [...threads] : threads.filter((t) => t.isResolved === (filter === 'resolved'));
+  const shown = filter === 'all' ? [...threads] : threads.filter((t) => t.isResolved === (filter === 'resolved'));
+  return shown.sort((a, b) => lastActivity(b).localeCompare(lastActivity(a)));
 }
 
 /**

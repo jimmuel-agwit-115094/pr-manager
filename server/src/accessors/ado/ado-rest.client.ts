@@ -67,7 +67,16 @@ export class AdoRestClient {
       const detail = await this.readMessage(response);
       throw new AppError(response.status === 400 ? 400 : 502, `ADO returned HTTP ${response.status}${detail ? `: ${detail}` : '.'}`);
     }
-    return (await response.json()) as T;
+    // Some writes (e.g. stage retry) answer 204 or an empty body; there's nothing to parse.
+    const text = response.status === 204 ? '' : await response.text();
+    if (!text) {
+      return undefined as T;
+    }
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      throw new AppError(502, 'ADO returned a response that is not JSON.');
+    }
   }
 
   private async readMessage(response: Response): Promise<string> {

@@ -40,6 +40,22 @@
 
       @if (build.stages.length) {
         <nav class="pivot" aria-label="Pipeline views"><span class="active">Stages</span></nav>
+        @let open = store.job();
+        @if (open && open.build.buildId === build.buildId) {
+          <app-job-panel
+            class="pane pane--job"
+            [job]="open.job"
+            [stageName]="open.stage.name"
+            [task]="store.selectedTask()"
+            [log]="store.log()"
+            [logLoading]="store.logLoading()"
+            [logError]="store.logError()"
+            [buildUrl]="build.url"
+            (back)="store.closeJob()"
+            (selectTask)="store.selectTask($event)"
+            (retryLog)="store.reloadLog()"
+          />
+        } @else {
         <div class="pane" [class.list-hidden]="listHidden()">
           @if (listHidden()) {
             <button type="button" class="expand" title="Show stage list" aria-label="Show stage list" (click)="listHidden.set(false)">
@@ -65,8 +81,10 @@
             [stageError]="store.stageErrorOf(build.buildId)"
             (select)="selectStage(build.buildId, $event)"
             (rerun)="store.retryStage(build.buildId, $event.stage, $event.allJobs)"
+            (openJob)="store.showJob(build.buildId, $event)"
           />
         </div>
+        }
       } @else {
         <p class="no-stages">Waiting for the build to start…</p>
       }

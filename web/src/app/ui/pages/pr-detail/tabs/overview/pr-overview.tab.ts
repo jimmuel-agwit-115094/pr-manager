@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { CurrentUserStore } from '../../../../../services/current-user.store';
 import { overallStatusLine, PrDetailStore } from '../../../../../services/pr-detail.store';
-import { ReviewThreadsStore, statusKey, type ThreadFilter } from '../../../../../services/review-threads.store';
+import { ReviewThreadsStore, lastActivity, statusKey, type ThreadFilter } from '../../../../../services/review-threads.store';
 import { CiStatusDotComponent } from '../../../../components/ci-status-dot/ci-status-dot.component';
 import { CodeSnippetComponent } from '../../../../components/code-snippet/code-snippet.component';
 import { ReviewThreadComponent } from '../../../../components/review-thread/review-thread.component';
@@ -28,6 +28,7 @@ export class PrOverviewTab {
   protected readonly currentUser = inject(CurrentUserStore);
   protected readonly filters = FILTERS;
   protected readonly statusKey = statusKey;
+  protected readonly lastActivity = lastActivity;
 
   /**
    * Required: pipeline, merge conflicts, comments, and approvals when the branch requires reviews.

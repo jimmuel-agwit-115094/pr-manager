@@ -16,7 +16,9 @@
   }
 </header>
 
-<main class="content" [class.content--wide]="wide()">
+<main class="content">
+  <!-- Sticky: breadcrumb, PR title and tabs stay on screen while the tab content scrolls. -->
+  <div class="page-head" [class.page-head--narrow]="!wideTab()">
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a routerLink="/">Pull requests</a>
     <span aria-hidden="true">›</span>
@@ -25,12 +27,7 @@
     <span>#{{ number() }}</span>
   </nav>
 
-  @if (store.detailError(); as error) {
-    <div class="message-bar" role="alert">
-      <span><strong>Couldn't load this pull request.</strong> {{ error.message }}</span>
-      <button type="button" class="btn" (click)="store.refresh()">Retry</button>
-    </div>
-  } @else if (store.detail(); as pr) {
+  @if (!store.detailError() && store.detail(); as pr) {
     <div class="pr-header">
       <div class="pr-heading">
         <h1>
@@ -91,8 +88,18 @@
         <a [routerLink]="tab.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{ tab.label }}</a>
       }
     </nav>
+  }
+  </div>
 
-    <router-outlet />
+  @if (store.detailError(); as error) {
+    <div class="message-bar" role="alert">
+      <span><strong>Couldn't load this pull request.</strong> {{ error.message }}</span>
+      <button type="button" class="btn" (click)="store.refresh()">Retry</button>
+    </div>
+  } @else if (store.detail()) {
+    <div class="tab-body" [class.tab-body--wide]="wideTab()">
+      <router-outlet />
+    </div>
   } @else {
     <div class="skeleton" aria-busy="true">
       <span class="sk-title"></span>

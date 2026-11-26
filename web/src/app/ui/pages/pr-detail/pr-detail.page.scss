@@ -40,15 +40,36 @@
   }
 }
 
+// Full window width on every tab, like ADO.
 .content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px 16px 40px;
+  padding: 0 24px 16px;
 }
 
-.content--wide {
+// ADO content width for tab content; the Pipeline tab's stage graph uses the full window.
+.tab-body,
+.page-head--narrow > * {
+  max-width: 1210px;
+  margin-inline: auto;
+}
+
+.tab-body--wide {
   max-width: none;
-  padding: 16px 24px 16px;
+}
+
+// Breadcrumb, PR title and tabs stay pinned to the top like a menu; tab content scrolls under it.
+.page-head {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  margin: 0 -24px 16px;
+  padding: 16px 24px 0;
+  background: var(--bg);
+  box-shadow: 0 1px 0 var(--border);
+
+  .tabs {
+    margin-bottom: 0;
+    border-bottom: none;
+  }
 }
 
 .breadcrumb {

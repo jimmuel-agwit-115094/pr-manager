@@ -1,4 +1,4 @@
-import type { PrJob, PrStage, StageState } from '@pr-manager/contracts';
+import type { PrBuildLog, PrIssue, PrJob, PrStage, PrTask, StageState } from '@pr-manager/contracts';
 import type { AdoRunDetails, AdoTimelineRecord } from '../../accessors/ado/ado.types';
 
 /** Where an Azure Pipelines check's details URL points: one ADO build. */
@@ -72,7 +72,27 @@ function durationOf(record: AdoTimelineRecord): number | null {
   return Number.isFinite(ms) && ms >= 0 ? ms : null;
 }
 
-const byOrder = (a: AdoTimelineRecord, b: AdoTimelineRecord): number => (a.order ?? 0) - (b.order ?? 0);
+const MAX_ISSUES = 20;
+
+function toPrTask(task: AdoTimelineRecord): PrTask {
+  const issues: PrIssue[] = (task.issues ?? [])
+    .filter((i) => (i.type === 'error' || i.type === 'warning') && i.message)
+    .slice(0, MAX_ISSUES)
+    .map((i) => ({ type: i.type as PrIssue['type'], message: i.message! }));
+  return { id: task.id, name: task.name, state: stateOf(task), durationMs: durationOf(task), logId: task.log?.id ?? null, issues };
+}
+
+/** ADO prefixes every log line with an ISO timestamp, e.g. "2026-11-20T15:06:13.8523117Z ". */
+const LOG_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z ?/;
+export const MAX_LOG_LINES = 10_000;
+
+export function toPrBuildLog(logId: number, raw: readonly string[]): PrBuildLog {
+  const truncated = raw.length > MAX_LOG_LINES;
+  const lines = (truncated ? raw.slice(-MAX_LOG_LINES) : raw).map((line) => line.replace(LOG_TIMESTAMP, ''));
+  return { logId, lines, truncated };
+}
+
+const byOrder =(a: AdoTimelineRecord, b: AdoTimelineRecord): number => (a.order ?? 0) - (b.order ?? 0);
 
 const RETRYABLE: ReadonlySet<StageState> = new Set(['FAILED', 'CANCELED', 'WARNING']);
 
@@ -106,7 +126,13 @@ export function toPrStages(records: readonly AdoTimelineRecord[], dependencies: 
         (childrenOf.get(phase.id) ?? [])
           .filter((r) => r.type === 'Job')
           .sort(byOrder)
-          .map((job) => ({ id: job.id, name: job.name, state: stateOf(job), durationMs: durationOf(job) })),
+          .map((job) => ({
+            id: job.id,
+            name: job.name,
+            state: stateOf(job),
+            durationMs: durationOf(job),
+            tasks: (childrenOf.get(job.id) ?? []).filter((r) => r.type === 'Task').sort(byOrder).map(toPrTask),
+          })),
       );
       const state = stateOf(stage);
       return {

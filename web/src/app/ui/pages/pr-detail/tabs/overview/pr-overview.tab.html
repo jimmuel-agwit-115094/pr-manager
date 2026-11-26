@@ -105,8 +105,9 @@
 
     @for (thread of review.filtered(); track thread.id) {
       <article class="card thread-card">
-        <app-code-snippet [path]="thread.path" [line]="thread.line" [lines]="thread.snippet" />
+        <app-code-snippet [path]="thread.path" [line]="thread.line" [lines]="thread.snippet" [date]="lastActivity(thread)" />
         <app-review-thread
+          [framed]="false"
           [thread]="thread"
           [viewerAvatar]="currentUser.user()?.avatarUrl ?? ''"
           [replying]="review.replyingTo() === thread.id"

@@ -1,46 +1,48 @@
 @let t = thread();
+@let canChange = t.isResolved ? t.canUnresolve : t.canResolve;
 <article class="thread" [class.thread--resolved]="t.isResolved" [attr.aria-label]="'Comment thread by ' + t.comments[0].author">
-  <div class="status">
-    <span class="pill" [class.pill--resolved]="t.isResolved">{{ t.isResolved ? 'Resolved' : 'Active' }}</span>
-    @if (t.isOutdated) {
-      <span class="pill pill--outdated">Outdated</span>
-    }
-    @if (t.isResolved ? t.canUnresolve : t.canResolve) {
-      <button
-        type="button"
-        class="status-btn"
-        [disabled]="statusBusy()"
-        [title]="t.isResolved ? 'Mark this thread active again' : 'Mark this thread resolved'"
-        (click)="statusChanged.emit(!t.isResolved)"
-      >
-        @if (statusBusy()) {
-          {{ t.isResolved ? 'Reactivating…' : 'Resolving…' }}
+  @for (comment of t.comments; track comment.id; let first = $first) {
+    <div class="comment">
+      <header class="comment-head">
+        @if (comment.authorAvatar) {
+          <img class="avatar" [src]="comment.authorAvatar" alt="" width="28" height="28" />
         } @else {
-          {{ t.isResolved ? 'Reactivate' : 'Resolve' }}
+          <span class="avatar avatar--empty" aria-hidden="true"></span>
         }
-      </button>
-    }
-  </div>
-  @if (statusError(); as message) {
-    <p class="status-error" role="alert">{{ message }}</p>
+        <strong class="author">{{ comment.author }}</strong>
+        <a class="time" [href]="comment.url" target="_blank" rel="noopener" [title]="comment.createdAt">{{ comment.createdAt | timeAgo }}</a>
+
+        @if (first) {
+          <div class="status">
+            @if (t.isOutdated) {
+              <span class="pill">Outdated</span>
+            }
+            <!-- ADO's status dropdown; GitHub threads only know Active / Resolved. -->
+            @if (canChange) {
+              <select
+                class="status-select"
+                [class.status-select--resolved]="t.isResolved"
+                aria-label="Thread status"
+                [disabled]="statusBusy()"
+                [value]="t.isResolved ? 'resolved' : 'active'"
+                (change)="statusChanged.emit($any($event.target).value === 'resolved')"
+              >
+                <option value="active">Active</option>
+                <option value="resolved">Resolved</option>
+              </select>
+            } @else {
+              <span class="status-text" [class.status-select--resolved]="t.isResolved">{{ t.isResolved ? 'Resolved' : 'Active' }}</span>
+            }
+          </div>
+        }
+      </header>
+      <!-- GitHub sanitizes bodyHTML; Angular sanitizes it again on bind. -->
+      <div class="body" [innerHTML]="comment.bodyHtml"></div>
+    </div>
   }
 
-  @for (comment of t.comments; track comment.id) {
-    <div class="comment">
-      @if (comment.authorAvatar) {
-        <img class="avatar" [src]="comment.authorAvatar" alt="" width="28" height="28" />
-      } @else {
-        <span class="avatar avatar--empty" aria-hidden="true"></span>
-      }
-      <div class="content">
-        <div class="meta">
-          <strong>{{ comment.author }}</strong>
-          <a [href]="comment.url" target="_blank" rel="noopener" [title]="comment.createdAt">{{ comment.createdAt | timeAgo }}</a>
-        </div>
-        <!-- GitHub sanitizes bodyHTML; Angular sanitizes it again on bind. -->
-        <div class="body" [innerHTML]="comment.bodyHtml"></div>
-      </div>
-    </div>
+  @if (statusError(); as message) {
+    <p class="status-error" role="alert">{{ message }}</p>
   }
 
   @if (replying()) {
@@ -55,6 +57,26 @@
       (cancelled)="replyCancelled.emit()"
     />
   } @else {
-    <button type="button" class="reply" (click)="replyOpened.emit()">Reply…</button>
+    <div class="reply-row">
+      @if (viewerAvatar()) {
+        <img class="avatar" [src]="viewerAvatar()" alt="" width="28" height="28" />
+      }
+      <button type="button" class="reply-input" (click)="replyOpened.emit()">Write a reply…</button>
+      @if (canChange) {
+        <button
+          type="button"
+          class="btn"
+          [disabled]="statusBusy()"
+          [title]="t.isResolved ? 'Mark this thread active again' : 'Mark this thread resolved'"
+          (click)="statusChanged.emit(!t.isResolved)"
+        >
+          @if (statusBusy()) {
+            {{ t.isResolved ? 'Reactivating…' : 'Resolving…' }}
+          } @else {
+            {{ t.isResolved ? 'Reactivate' : 'Resolve' }}
+          }
+        </button>
+      }
+    </div>
   }
 </article>

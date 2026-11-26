@@ -1,0 +1,68 @@
+@let j = job();
+<aside class="steps" [attr.aria-label]="j.name + ' steps'">
+  <button type="button" class="back" (click)="back.emit()">
+    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+      <path d="M13 8H3m4-4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+    <span>Back to stages</span>
+  </button>
+  <div class="job">
+    <app-stage-state-icon [state]="j.state" />
+    <span class="job-name" [title]="j.name">
+      <span>{{ j.name }}</span>
+      <small>{{ stageName() }}</small>
+    </span>
+    <span class="time">{{ formatDuration(j.durationMs) }}</span>
+  </div>
+  <ul>
+    @for (t of j.tasks; track t.id) {
+      <li>
+        <button type="button" [class.selected]="t.id === task()?.id" [title]="t.name" (click)="selectTask.emit(t.id)">
+          <app-stage-state-icon [state]="t.state" [size]="14" />
+          <span class="name">{{ t.name }}</span>
+          <span class="time">{{ formatDuration(t.durationMs) }}</span>
+        </button>
+      </li>
+    } @empty {
+      <li class="empty">No steps yet.</li>
+    }
+  </ul>
+</aside>
+
+<section class="detail" [attr.aria-label]="task()?.name ?? 'Step log'">
+  @if (task(); as t) {
+    <header class="detail-head">
+      <app-stage-state-icon [state]="t.state" [size]="24" />
+      <h3>{{ t.name }}</h3>
+      @if (buildUrl()) {
+        <a [href]="buildUrl()" target="_blank" rel="noopener">Open in Azure DevOps</a>
+      }
+    </header>
+
+    @if (errors().length) {
+      <ul class="issues" aria-label="Errors and warnings">
+        @for (issue of errors(); track $index) {
+          <li [class]="issue.type">
+            <app-stage-state-icon [state]="issue.type === 'error' ? 'FAILED' : 'WARNING'" [size]="14" />
+            <span>{{ issue.message }}</span>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (logError(); as err) {
+      <div class="state" role="alert">
+        <p>Couldn't load the log. {{ err.message }}</p>
+        <button type="button" class="btn" (click)="retryLog.emit()">Retry</button>
+      </div>
+    } @else if (log(); as l) {
+      <app-log-viewer [lines]="l.lines" [truncated]="l.truncated" [label]="t.name + ' log'" />
+    } @else if (t.logId === null) {
+      <div class="state"><p>This step has no log{{ t.state === 'NOT_STARTED' ? ' yet' : '' }}.</p></div>
+    } @else if (logLoading()) {
+      <div class="state" aria-busy="true"><p>Loading log…</p></div>
+    }
+  } @else {
+    <div class="state"><p>Pick a step to see its log.</p></div>
+  }
+</section>

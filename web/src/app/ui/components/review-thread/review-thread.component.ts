@@ -8,11 +8,14 @@ import { CommentBoxComponent } from '../comment-box/comment-box.component';
   selector: 'app-review-thread',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommentBoxComponent, TimeAgoPipe],
+  host: { '[class.framed]': 'framed()' },
   templateUrl: './review-thread.component.html',
   styleUrl: './review-thread.component.scss',
 })
 export class ReviewThreadComponent {
   readonly thread = input.required<PrReviewThread>();
+  /** Draws its own card (inline in Files Changed). Off when a parent card already frames it. */
+  readonly framed = input(true);
   readonly viewerAvatar = input('');
   readonly replying = input(false);
   readonly posting = input(false);

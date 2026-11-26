@@ -23,6 +23,7 @@
           [error]="stageError()?.stage === stage.identifier ? stageError()!.error : null"
           (toggle)="onToggle(stage)"
           (rerun)="rerun.emit({ stage: stage.identifier!, allJobs: $event })"
+          (openJob)="openJob.emit($event)"
         />
       }
     </div>

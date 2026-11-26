@@ -21,7 +21,7 @@
     <h1>Pull requests</h1>
     <app-repo-picker
       [repos]="store.repos()"
-      [selectedKey]="store.selectedRepo() ? repoKey(store.selectedRepo()!) : null"
+      [selectedKey]="store.selectedRepoKey()"
       (selectedKeyChange)="store.selectRepo($event)"
     />
   </div>

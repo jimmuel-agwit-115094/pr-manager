@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output, signal } from '@angular/core';
 import type { ApiError, PrStage } from '@pr-manager/contracts';
 import { formatDuration } from '../../../services/build.store';
 import { StageStateIconComponent } from '../stage-state-icon/stage-state-icon.component';
@@ -11,7 +11,10 @@ import { StageStateIconComponent } from '../stage-state-icon/stage-state-icon.co
   host: {
     '[class.expanded]': 'expanded()',
     '[class.selected]': 'selected()',
+    // Lifts this card above its neighbours so the open rerun menu isn't covered.
+    '[class.menu-open]': 'menuOpen()',
     '(keydown.escape)': 'menuOpen.set(false)',
+    '(document:click)': 'closeOnOutsideClick($event)',
   },
   templateUrl: './stage-card.component.html',
   styleUrl: './stage-card.component.scss',
@@ -33,6 +36,8 @@ export class StageCardComponent {
   readonly toggle = output<void>();
   /** allJobs=false reruns only the failed jobs; true reruns every job in the stage. */
   readonly rerun = output<boolean>();
+  /** A job was clicked: show its steps and log. */
+  readonly openJob = output<string>();
 
   protected readonly menuOpen = signal(false);
   protected readonly formatDuration = formatDuration;
@@ -46,6 +51,14 @@ export class StageCardComponent {
     const noun = jobs.length === 1 ? 'job' : 'jobs';
     return done === jobs.length ? `${jobs.length} ${noun} completed` : `${done}/${jobs.length} ${noun} completed`;
   });
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  protected closeOnOutsideClick(event: MouseEvent): void {
+    if (this.menuOpen() && !this.host.nativeElement.contains(event.target as Node)) {
+      this.menuOpen.set(false);
+    }
+  }
 
   protected emit(allJobs: boolean): void {
     this.menuOpen.set(false);

@@ -48,6 +48,7 @@ export class StageGraphComponent {
 
   readonly select = output<string>();
   readonly rerun = output<{ stage: string; allJobs: boolean }>();
+  readonly openJob = output<string>();
 
   private readonly canvas = viewChild.required<ElementRef<HTMLElement>>('canvas');
 

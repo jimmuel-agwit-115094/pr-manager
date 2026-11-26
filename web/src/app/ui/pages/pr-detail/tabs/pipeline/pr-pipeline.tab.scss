@@ -72,6 +72,10 @@
   // Fill the window below the PR header and tabs, like ADO.
   height: max(480px, calc(100vh - 290px));
 
+  &.pane--job {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+
   &.list-hidden {
     grid-template-columns: 36px minmax(0, 1fr);
   }

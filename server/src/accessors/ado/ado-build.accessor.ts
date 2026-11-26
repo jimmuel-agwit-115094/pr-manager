@@ -1,5 +1,5 @@
 import type { AdoRestClient } from './ado-rest.client';
-import type { AdoBuild, AdoList, AdoRunDetails, AdoTimeline } from './ado.types';
+import type { AdoBuild, AdoList, AdoLogLines, AdoRunDetails, AdoTimeline } from './ado.types';
 
 const RUN_DETAILS_PROVIDER = 'ms.vss-build-web.run-details-data-provider';
 
@@ -21,6 +21,10 @@ export class AdoBuildAccessor {
 
   getTimeline(org: string, project: string, buildId: number): Promise<AdoTimeline> {
     return this.clientFor(org).get<AdoTimeline>(project, `build/builds/${buildId}/timeline`);
+  }
+
+  getLog(org: string, project: string, buildId: number, logId: number): Promise<AdoLogLines> {
+    return this.clientFor(org).get<AdoLogLines>(project, `build/builds/${buildId}/logs/${logId}`);
   }
 
   /**

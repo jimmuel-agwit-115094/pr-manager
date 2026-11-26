@@ -19,6 +19,16 @@ export function buildsRoutes(builds: BuildService): Router {
     res.json(await builds.list(owner, repo, parsePrNumber(number)));
   });
 
+  // GET /:buildId/logs/:logId → one step's log lines
+  router.get('/:buildId/logs/:logId', async (req, res) => {
+    const { owner, repo, number, buildId, logId } = req.params as BuildParams & { logId: string };
+    const id = Number(logId);
+    if (!Number.isSafeInteger(id) || id <= 0) {
+      throw new AppError(400, `Invalid log id "${logId}".`);
+    }
+    res.json(await builds.getLog(owner, repo, parsePrNumber(number), parseBuildId(buildId), id));
+  });
+
   // POST /:buildId/retry → reruns the failed jobs of the whole build
   router.post('/:buildId/retry', async (req, res) => {
     const { owner, repo, number, buildId } = req.params as BuildParams;

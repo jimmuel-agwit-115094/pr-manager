@@ -37,7 +37,15 @@ export class PrListStore {
 
   readonly repos = computed(() => (this.reposResource.hasValue() ? this.reposResource.value() : []));
 
-  readonly selectedRepo = computed(() => this.repos().find((r) => repoKey(r) === this.selectedKey()) ?? null);
+  /** The remembered repo, else the default: the first one in repos.config.json (Passport). */
+  readonly selectedRepo = computed(() => {
+    const repos = this.repos();
+    return repos.find((r) => repoKey(r) === this.selectedKey()) ?? repos[0] ?? null;
+  });
+  readonly selectedRepoKey = computed(() => {
+    const repo = this.selectedRepo();
+    return repo ? repoKey(repo) : null;
+  });
 
   private readonly prsResource = rxResource({
     params: () => {
